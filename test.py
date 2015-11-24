@@ -56,63 +56,65 @@ for line in text:
 # Build embedding models 
 dim = 16
 
-Uo = np.random.random((dim, 2*len(vocab))) * 2 * 0.1 - 0.1
-Ur = np.random.random((dim, 2*len(vocab))) * 2 * 0.1 - 0.1
+Uom = np.random.random((dim, len(vocab))) * 2 * 0.1 - 0.1
+Uoq = np.random.random((dim, len(vocab))) * 2 * 0.1 - 0.1
 
 
 wrd_to_ind = {wrd:ind for ind, wrd in enumerate(vocab)}
 ind_to_wrd = {ind:wrd for ind, wrd in enumerate(vocab)}
 
-def binvec(item, key):
-	vec = np.zeros(len(vocab)*2)
-	if key == 'm':
-		inds = [wrd_to_ind[w]*2+1 for w in item.split()]
-	elif key == 'q':
-		inds = [wrd_to_ind[w]*2 for w in item.split()]
-	else:
-		raise Warning('Invalid Key')
-		return None
+def binvec(item):
+	vec = np.zeros(len(vocab))
+	inds = [wrd_to_ind[w] for w in item.split()]
 	vec[inds] = 1
 	return vec
-
-
+	
 q = 'where is mary'
+m = memory[1]
 
-q_embed = np.dot(Uo, binvec(q, key='q'))
+q_embed = np.dot(Uoq, binvec(q))
 
-# Get best memory 
-best = (0, 0)
+print q
+print m
+print ''
+
+rate = 0.05
+gamma = 0.1
+
+
+# Get scores
+for i in range(10):
+	error = []
+	for x, y in memory.iteritems():
+		vec = binvec(y)
+		target = np.dot(q_embed, np.dot(Uom, binvec(m)))
+
+		m_embed = np.dot(Uom, vec)
+		score = np.dot(q_embed, m_embed)
+		loss = max(score + gamma - target, 0)
+		if y != m:
+			error.append(loss)
+		else:
+			error.append(0)
+
+		for e in range(len(error)): 
+
+			if error[e] > 0:
+				q_grad = np.outer(q_embed * np.dot(Uom, binvec(memory.values()[e])), binvec(q))
+				m_grad = np.outer(q_embed, binvec(memory.values()[e]))
+
+				Uoq += -rate * q_grad
+				Uom += -rate * m_grad
+	print 'Loss:', sum(error)
+
+# error = []
+print ''
+print 'Final Results'
+print ''
+# Get scores
 for x, y in memory.iteritems():
-	vec = binvec(y, key='m')
-	m_embed = np.dot(Uo, vec)
+	vec = binvec(y)
+	m_embed = np.dot(Uom, vec)
 	score = np.dot(q_embed, m_embed)
-	if score > best[1]:
-		best = (x, score)
-
-
-print ''
-print 'Memory extraction:'
-print q
-print (memory[best[0]], best[1])
-
-
-o_embed = np.dot(Ur, binvec(q, key='q')+binvec(memory[best[0]], key='q'))
-
-# Get best response
-best = (0, '')
-for x, y in wrd_to_ind.iteritems():
-	vec = binvec(x, key='m')
-	r_embed = np.dot(Ur, vec)
-	score = np.dot(o_embed, r_embed)
-	if score > best[0]:
-		best = (score, x)
-
-print ''
-print 'Response extraction:'
-print q
-print best
-
-print ''
-print memory
-print queries
+	print y, score
 
