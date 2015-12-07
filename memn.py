@@ -1,4 +1,3 @@
-import sys
 import random
 import numpy as np
 
@@ -7,7 +6,7 @@ from simplequestion import Query
 
 class MemoryNetwork(object):
     # Note that this is a WIP and will be fixed to generalize across all FB20 tasks
-    def __init__(self, vocab_dim, embedding_dim, vectorizer, k=2):
+    def __init__(self, vocab_dim, embedding_dim, vectorizer):
         self.vectorizer = vectorizer
         self.Uf = np.random.random((embedding_dim, vocab_dim+3)) * 0.2 - 0.1 # 3 is for time features
         self.Uq = np.random.random((embedding_dim, vocab_dim)) * 0.2 - 0.1

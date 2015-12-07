@@ -1,12 +1,10 @@
-import numpy as np 
-
 from memn import MemoryNetwork
 from simplequestion import load
 from memn_input import BagOfWords
 
 
 train_stories = load('data/en/qa1_single-supporting-fact_train.txt')
-test_stories = load('data/en/qa1_single-supporting-fact_train.txt')
+test_stories = load('data/en/qa1_single-supporting-fact_test.txt')
 
 vectorizer = BagOfWords(train_stories)
 
