@@ -1,7 +1,7 @@
 from collections import namedtuple
 
 
-Fact = namedtuple('Fact', ['sentence'])
+Fact = namedtuple('Fact', ['sentence', 'index'])
 Query = namedtuple('Query', ['sentence', 'answer', 'support'])
 
 
@@ -24,12 +24,12 @@ def parse_line(line):
     if '?' in sentence:
         parsed = parse_query(sentence)
     else:
-        parsed = parse_fact(sentence)
+        parsed = parse_fact(sentence, idx)
     return idx, parsed
 
 
-def parse_fact(fact):
-    return Fact(fact.strip())
+def parse_fact(fact, idx):
+    return Fact(fact.strip(), int(idx))
 
 
 def parse_query(sentence):
