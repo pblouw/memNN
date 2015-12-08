@@ -34,4 +34,5 @@ def parse_fact(fact, idx):
 
 def parse_query(sentence):
     query, answer, support = sentence.split('\t')
-    return Query(query.strip(), answer.strip(), int(support))
+    support = [int(s) for s in support.strip().split()]
+    return Query(query.strip(), answer.strip(), support)

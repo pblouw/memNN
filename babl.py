@@ -8,15 +8,20 @@ test_stories = load('data/en/qa1_single-supporting-fact_test.txt')
 
 vectorizer = BagOfWords(train_stories)
 
-memnet = MemoryNetwork(vocab_dim=vectorizer.vocab_dim, embedding_dim=50,
-                       vectorizer=vectorizer)
+memnet = MemoryNetwork(vocab_dim=vectorizer.vocab_dim, embedding_dim=100,
+                       vectorizer=vectorizer, k=1)
 
 
+x = memnet.predict_support(test_stories)
+print 'Support accuracy before learning: ', x
 
-print 'Accuracy before training for selecting best supporting memory on test set:' 
-print memnet.predict(test_stories)
+y = memnet.predict_answers(test_stories)
+print 'Response accuracy before learning: ', y
 
-memnet.fit(train_stories, 1000)
+memnet.fit(train_stories, 800)
 
-print 'Accuracy after training for selecting best supporting memory on test set:'
-print memnet.predict(test_stories)
+x = memnet.predict_support(test_stories)
+print 'Support accuracy after Learning: ', x
+
+y = memnet.predict_answers(test_stories)
+print 'Response accuracy after Learning: ', y

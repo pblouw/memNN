@@ -12,7 +12,7 @@ class BagOfWords(object):
 
     @property
     def vocab(self):
-        return self._vectorizer.vocabulary_
+        return self._vectorizer.vocabulary_.keys()
 
     @property
     def vocab_dim(self):
