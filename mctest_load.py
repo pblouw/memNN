@@ -83,8 +83,7 @@ def preprocess(text):
     text = text.translate(None, string.punctuation)
     return text
 
-stories = load_stories('MCTest/mc160.train.tsv')
 
-print stories
-
-
+if __name__ == '__main__':
+    stories = load_stories('MCTest/mc160.train.tsv')
+    print stories
