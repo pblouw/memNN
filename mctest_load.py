@@ -23,13 +23,13 @@ def load_answers(filename):
     return answers
 
 
-def load_stories(filename):
+def load_stories(filename, answerfile):
     stories = []
 
     with open(filename, 'r') as f:
         data = f.read()
         raw_stories = data.split('\n')[:-1]
-        answers = load_answers('MCTest/mc160.train.ans')
+        answers = load_answers(answerfile)
 
         for ind, raw in enumerate(raw_stories):
             ans = answers[ind]
