@@ -1,5 +1,6 @@
 import numpy as np
 import modules
+import gensim
 
 from vocabulary import TextVocabulary
 from sklearn.feature_extraction.text import CountVectorizer
@@ -66,6 +67,18 @@ class WeakMemoryNetwork(object):
 
         for word in word_list:
             self.vocab[word]
+
+
+        # Build word2vec vocab
+        model = gensim.models.word2vec.Word2Vec.load_word2vec_format('GoogleNews-vectors-negative300.bin', binary=True)
+
+        self.word_vecs = dict()
+
+        for word in word_list:
+            if word in model.vocab:
+                self.word_vecs[word] = model[word]
+            else:
+                self.word_vecs[word] = self.vocab[word].v
 
     def train(self, story):
         self._output.build_memory(story)

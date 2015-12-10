@@ -1,6 +1,7 @@
 import numpy as np
 
 
+
 class Module(object):
     # Things common to all modules
     def __init__(self, rate=0.03):
@@ -80,7 +81,8 @@ class Output(Module):
 
         hrr = np.zeros(self.net.embedding_dim)
         for word in words:
-            hrr += self.net.vocab[word].v
+            if word in self.word_vecs.vocab:
+                hrr += self.net.word_vecs[word]
         return hrr
 
 
@@ -94,8 +96,13 @@ class Input(Module):
 
 
     def encode_question(self, query):
-        bow = self.net.vectorizer(query.text).flatten()
-        return np.dot(self.embedder, bow)
+        embed = np.zeros(self.net.embedding_dim)
+
+        for word in query.text:
+            embed += self.net.word_vecs[word]
+
+        # bow = self.net.vectorizer(query.text).flatten()
+        # return np.dot(self.embedder, bow)
 
     def update_parameters(self, error, bow):
         self.embedder += -self.rate * np.outer(error, bow)

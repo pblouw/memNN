@@ -14,8 +14,11 @@ def compute_accuracy(stories, model):
     return float(accuracy) / float(len(stories))
 
 # initialize with all stories to get full vocab
-model = WeakMemoryNetwork(256, all_stories)
+model = WeakMemoryNetwork(300, all_stories)
 
+
+print len(model.word_vecs)
+print len(model.vocab.keys)
 
 print 'Accuracy prior to training: ', compute_accuracy(train_stories, model)
 
