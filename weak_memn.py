@@ -62,7 +62,7 @@ class WeakMemoryNetwork(object):
         self.vectorizer = BagOfWords(word_list)
 
         # Build SPA vocab from word list for HRR use
-        self.vocab = TextVocabulary(self.embedding_dim, max_similarity=0.2)
+        self.vocab = TextVocabulary(self.embedding_dim // 2, max_similarity=0.2)
 
         for word in word_list:
             self.vocab[word]

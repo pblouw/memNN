@@ -1,4 +1,5 @@
 import numpy as np
+from nengo import spa
 
 
 class Module(object):
@@ -65,7 +66,7 @@ class Output(Module):
 
     def build_memory(self, story):
         # Converts story text into array of HRRs encoding sents
-        self.memory = np.zeros((0, self.net.embedding_dim))
+        self.memory = np.zeros((0, self.net.embedding_dim // 2))
         text = story.text
 
         idx = 0
@@ -74,11 +75,39 @@ class Output(Module):
             self.memory = np.vstack([self.memory, hrr])
             idx += 1
 
+        self.memory = np.hstack([self.memory, self.build_timetags(
+            self.memory.shape[0], self.net.embedding_dim // 2)[::-1]])
+
+    def build_timetags(self, n, d):
+        base = spa.SemanticPointer(d)
+        base.make_unitary()
+        base = base.v
+        # base = np.zeros(d)
+        # base[0] = 1.
+
+        step_size = 0.25
+
+        increment = np.zeros(d)
+        increment[1] = 1.
+        increment = np.fft.irfft(np.fft.rfft(increment) ** step_size)
+
+        base_pos_v = np.empty((n, d))
+        for i in range(n):
+            if i <= 0:
+                a = np.fft.rfft(base)
+            else:
+                a = np.fft.rfft(base_pos_v[i - 1])
+            b = np.fft.rfft(increment)
+            a *= b
+            base_pos_v[i, :] = np.fft.irfft(a)
+        # base_pos_v[:, :] = 0.
+        return base_pos_v
+
     def sentence_to_hrr(self, sentence, idx):
         # Modify this to include parsing, time features
         words = sentence.split()
 
-        hrr = np.zeros(self.net.embedding_dim)
+        hrr = np.zeros(self.net.embedding_dim // 2)
         for word in words:
             hrr += self.net.vocab[word].v
         return hrr
@@ -99,6 +128,3 @@ class Input(Module):
 
     def update_parameters(self, error, bow):
         self.embedder += -self.rate * np.outer(error, bow)
-
-
-
