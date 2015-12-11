@@ -81,7 +81,7 @@ class Output(Module):
 
         hrr = np.zeros(self.net.embedding_dim)
         for word in words:
-            if word in self.word_vecs.vocab:
+            if word in self.net.word_vecs:
                 hrr += self.net.word_vecs[word]
         return hrr
 
@@ -99,8 +99,9 @@ class Input(Module):
         embed = np.zeros(self.net.embedding_dim)
 
         for word in query.text:
-            embed += self.net.word_vecs[word]
-
+            if word in self.net.word_vecs:
+                embed += self.net.word_vecs[word]
+        return embed
         # bow = self.net.vectorizer(query.text).flatten()
         # return np.dot(self.embedder, bow)
 

@@ -99,9 +99,9 @@ class WeakMemoryNetwork(object):
             self._response.update_parameters(r_grad, q_embed+o_embed)  
 
             # Error gradient wrt input to R module
-            r_input_grad = np.dot(self._response.choices.T, r_grad)    
-            self._input.update_parameters(
-                    r_input_grad, self.vectorizer(query.text).flatten())
+            # r_input_grad = np.dot(self._response.choices.T, r_grad)    
+            # self._input.update_parameters(
+            #         r_input_grad, self.vectorizer(query.text).flatten())
 
             # TODO: Figure out update to Input module params based on gradient
             # Right now the R module parameters are the only thing being trained

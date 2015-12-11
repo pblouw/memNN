@@ -2,8 +2,8 @@ from mctest_load import load_stories
 from weak_memn import WeakMemoryNetwork
 
 
-train_stories = load_stories('MCTest/mc160.train.tsv', 'MCTest/mc160.train.ans')
-test_stories = load_stories('MCTest/mc160.test.tsv', 'MCTest/mc160.test.ans')
+train_stories = load_stories('MCTest/mc500.train.tsv', 'MCTest/mc500.train.ans')
+test_stories = load_stories('MCTest/mc500.test.tsv', 'MCTest/mc500.test.ans')
 all_stories = train_stories + test_stories
 
 def compute_accuracy(stories, model):
