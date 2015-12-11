@@ -14,24 +14,25 @@ def compute_accuracy(stories, model):
     return float(accuracy) / float(len(stories))
 
 # initialize with all stories to get full vocab
-model = WeakMemoryNetwork(300, all_stories)
+# model = WeakMemoryNetwork(300, all_stories)
+
+print all_stories[0].text
+
+# print len(model.word_vecs)
+# print len(model.vocab.keys)
+
+# print 'Accuracy prior to training: ', compute_accuracy(train_stories, model)
 
 
-print len(model.word_vecs)
-print len(model.vocab.keys)
-
-print 'Accuracy prior to training: ', compute_accuracy(train_stories, model)
-
-
-# Train for a certain number of epochs
-for i in range(5):
-    for story in train_stories:
-        model.train(story)
+# # Train for a certain number of epochs
+# for i in range(5):
+#     for story in train_stories:
+#         model.train(story)
 
 
-print 'Accuracy after training: ', compute_accuracy(train_stories, model)
+# print 'Accuracy after training: ', compute_accuracy(train_stories, model)
 
 
-# Test generalization on test set
-print 'Generalization accuracy: ', compute_accuracy(test_stories, model)
+# # Test generalization on test set
+# print 'Generalization accuracy: ', compute_accuracy(test_stories, model)
 
