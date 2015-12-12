@@ -6,7 +6,6 @@ import nltk
 import string
 from collections import namedtuple
 from subprocess import call
-from stanford_corenlp_pywrapper import CoreNLP
 import sys
 
 tokenizer = nltk.load('tokenizers/punkt/english.pickle')
@@ -44,16 +43,6 @@ def load_stories(filename, answerfile):
 def parse(raw_story, answers):
     items = raw_story.split('\t')[2:]
 
-
-    # Do coreference resolution on story
-    nlp = CoreNLP("coref", corenlp_jars=['/Users/peterblouw/corenlp/*'])
-
-    # print items[0]
-    test = nlp.parse_doc(items[0])['entities']
-    print test
-    # print type(items[0])
-
-    sys.exit()
 
     text = tokenizer.tokenize(items.pop(0))
     text = [t.replace('newline', ' ') for t in text]
