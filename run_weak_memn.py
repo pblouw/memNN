@@ -8,7 +8,7 @@ all_stories = train_stories + test_stories
 
 def compute_accuracy(stories, model):
     accuracy = 0
-    for story in stories: 
+    for story in stories:
         score = model.predict_answer(story)
         accuracy += score
     return float(accuracy) / float(len(stories))
@@ -16,6 +16,7 @@ def compute_accuracy(stories, model):
 # initialize with all stories to get full vocab
 model = WeakMemoryNetwork(512, all_stories)
 
+#print all_stories[0].text
 
 print 'Accuracy prior to training: ', compute_accuracy(train_stories, model)
 
@@ -31,4 +32,3 @@ print 'Accuracy after training: ', compute_accuracy(train_stories, model)
 
 # Test generalization on test set
 print 'Generalization accuracy: ', compute_accuracy(test_stories, model)
-

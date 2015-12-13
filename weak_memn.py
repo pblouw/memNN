@@ -86,13 +86,21 @@ class WeakMemoryNetwork(object):
                 a = modules.Module.softmax(o)
                 return np.diag(a) - np.outer(a, a)
 
+            J = softmax_jacobian(
+                np.dot(self._response.choices, q_embed + o_embed))
+
             # Update R based on this gradient
-            self._response.update_parameters(r_grad, q_embed+o_embed)  
+            #self._response.update_parameters(r_grad, q_embed+o_embed)  
+
+            self._response.embedder += -self._response.rate * np.outer(
+                q_embed + o_embed,
+                np.sum(r_grad[:, None] * np.dot(
+                    J, self._response.choices_bow), axis=0))
 
             # Error gradient wrt input to R module
 
 
-            # v^T W^T M^T = q_embed.T
+            # v^T W^T = q_embed.T
             a = np.dot(q_embed.T, self._output.memory.T)
             J1 = softmax_jacobian(a)
             b = np.dot(self._output.memory, self._response.choices.T)
@@ -104,14 +112,14 @@ class WeakMemoryNetwork(object):
                 e, self.vectorizer(query.text).flatten())
 
 
-            self._response.build_choices(query)
-            q_embed = self._input.encode_question(query)
-            o_embed = self._output.encode_output_features(q_embed)
+            #self._response.build_choices(query)
+            #q_embed = self._input.encode_question(query)
+            #o_embed = self._output.encode_output_features(q_embed)
 
-            prediction2 = self._response.predict(q_embed+o_embed)
-            r_grad2 = prediction2 - target      
-            print target, prediction, prediction2, np.linalg.norm(r_grad2) - np.linalg.norm(r_grad)
-            assert np.linalg.norm(r_grad2) - np.linalg.norm(r_grad) <= 0
+            #prediction2 = self._response.predict(q_embed+o_embed)
+            #r_grad2 = prediction2 - target      
+            #print target, prediction, prediction2, np.linalg.norm(r_grad2) - np.linalg.norm(r_grad)
+            #assert np.linalg.norm(r_grad2) - np.linalg.norm(r_grad) <= 0
 
             #r_input_grad = np.dot(self._response.choices.T, r_grad)    
             #self._input.update_parameters(

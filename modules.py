@@ -127,4 +127,4 @@ class Input(Module):
         return np.dot(self.embedder, bow)
 
     def update_parameters(self, error, bow):
-        self.embedder += -self.rate * np.outer(error, bow)
+        self.embedder += -self.rate * 100. * np.outer(error, bow)
