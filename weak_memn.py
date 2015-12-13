@@ -5,7 +5,7 @@ import gensim
 from vocabulary import TextVocabulary
 from sklearn.feature_extraction.text import CountVectorizer
 
-
+stopwords = ['the','a','of','and','this','that','to']
 
 class BagOfWords(object):
     # Modified slightly from version used for standard memnet
@@ -68,17 +68,18 @@ class WeakMemoryNetwork(object):
         for word in word_list:
             self.vocab[word]
 
-
         # Build word2vec vocab
-        model = gensim.models.word2vec.Word2Vec.load_word2vec_format('GoogleNews-vectors-negative300.bin', binary=True)
+        model = gensim.models.word2vec.Word2Vec.load_word2vec_format(
+                'GoogleNews-vectors-negative300.bin', binary=True)
 
         self.word_vecs = dict()
 
         for word in word_list:
-            if word in model.vocab:
-                self.word_vecs[word] = model[word]
-            else:
-                self.word_vecs[word] = self.vocab[word].v
+            if word not in stopwords:
+                if word in model.vocab:
+                    self.word_vecs[word] = model[word]
+                else:
+                    self.word_vecs[word] = self.vocab[word].v
 
     def train(self, story):
         self._output.build_memory(story)
@@ -88,7 +89,7 @@ class WeakMemoryNetwork(object):
             q_embed = self._input.encode_question(query)
             o_embed = self._output.encode_output_features(q_embed)
 
-            prediction = self._response.predict(q_embed+o_embed)
+            prediction = self._response.predict(o_embed)
             target = np.array([1 if c == query.answer else 0 
                                for c in query.choices])
             
@@ -96,15 +97,26 @@ class WeakMemoryNetwork(object):
             r_grad = prediction - target      
 
             # Update R based on this gradient
-            self._response.update_parameters(r_grad, q_embed+o_embed)  
+            # self._response.update_parameters(r_grad, q_embed+o_embed)  
 
             # Error gradient wrt input to R module
-            # r_input_grad = np.dot(self._response.choices.T, r_grad)    
-            # self._input.update_parameters(
-            #         r_input_grad, self.vectorizer(query.text).flatten())
+            r_input_grad = np.dot(self._response.choices.T, r_grad)    
+            
+            soft_out_grad = np.dot(self._output.memory, r_input_grad)
+            soft_in_grad = -np.outer(self._output.softmax_dist, self._output.softmax_dist)
+            
+            diag = self._output.softmax_dist * (1 - self._output.softmax_dist)
+            np.fill_diagonal(soft_in_grad, diag)
+            soft_in_grad = np.sum(soft_in_grad, axis=1)
 
-            # TODO: Figure out update to Input module params based on gradient
-            # Right now the R module parameters are the only thing being trained
+            soft_grad =  soft_out_grad # * soft_in_grad
+
+            q_grad = np.dot(self._output.memory.T, soft_grad)
+
+            print 'Norm: ', np.linalg.norm(q_grad)
+
+            self._input.update_parameters(q_grad, self.vectorizer(query.text).flatten())
+
 
     def predict_answer(self, story):
         correct = 0

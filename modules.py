@@ -59,8 +59,8 @@ class Output(Module):
                                          len(net.vocab.keys)))*0.2-0.1
 
     def encode_output_features(self, q_embedding):
-        weights = self.softmax(np.dot(self.memory, q_embedding))
-        output_features = np.dot(self.memory.T, weights)
+        self.softmax_dist = self.softmax(np.dot(self.memory, q_embedding))
+        output_features = np.dot(self.memory.T, self.softmax_dist)
         
         return output_features
 
