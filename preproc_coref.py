@@ -18,7 +18,8 @@ def process(path):
         for i, story in enumerate(stories):
             infile = os.path.join(tmpdir, str(i) + '.txt')
             with open(infile, 'w') as f:
-                f.write('. '.join(story.text))
+                f.write(story.text)
+            
             filelist.append(infile)
 
         filelist_filename = os.path.join(tmpdir, 'filelist')
@@ -39,16 +40,13 @@ def process(path):
                 lines = f.readlines()
                 lines = [l.strip() for l in lines]
                 lines = [l for l in lines if len(l) > 0]
-
-            text = '. '.join(story.text)
-
-            processed.append(Story(parse(text, lines), story.queries))
+                
+            processed.append(Story(parse(story.text, lines), story.queries))    
     finally:
         shutil.rmtree(tmpdir)
 
     with open(path + '.coref', 'wb') as f:
         pickle.dump(processed, f, 2)
-
 
 if __name__ == '__main__':
     os.chdir('stanford-corenlp-full-2015-12-09')

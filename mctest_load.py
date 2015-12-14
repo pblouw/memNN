@@ -14,7 +14,6 @@ Story = namedtuple('Story', ['text', 'queries'])
 Query = namedtuple('Query', ['text', 'choices', 'answer'])
 
 
-
 def load_answers(filename):
     with open(filename, 'r') as f:
         answers = f.read().split('\n')[:-1]
@@ -43,10 +42,8 @@ def load_stories(filename, answerfile):
 def parse(raw_story, answers):
     items = raw_story.split('\t')[2:]
 
-
-    text = tokenizer.tokenize(items.pop(0))
-    text = [t.replace('newline', ' ') for t in text]
-    text = [preprocess(t) for t in text]
+    text = items.pop(0)
+    text = text.replace('\\newline', ' ')
 
     queries = parse_queries(items, answers)
 
@@ -59,9 +56,12 @@ def parse_queries(items, answers):
     counter = 0
     for index, item in enumerate(items):
         if '?' in item and '?\"' not in item:
-            text = preprocess(strip_tag(item))
+            text = strip_tag(item)
+            text = text.strip()
+
             choices = items[index+1:index+5]
-            choices = [preprocess(c) for c in choices]
+            choices = [c.capitalize() for c in choices]
+            choices = [c.replace('\r', ' ').strip() for c in choices]
 
             ans = choices[text_to_ind(answers[counter])]
 
@@ -81,8 +81,8 @@ def strip_tag(item):
 
 def preprocess(text):
     text = text.strip()
-    text = text.lower()
-    text = text.translate(None, string.punctuation)
+    # text = text.lower()
+    # text = text.translate(None, string.punctuation)
     return text
 
 

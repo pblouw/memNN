@@ -92,17 +92,16 @@ def parse(text, lines):
         sentence = reflink.sentence 
         location = reflink.idx
         
-        if location >= len(sentences[sentence]):
-            print 'location out of bound'
-            return sentences
-
-        if len(referent.split()) < 2:
-            sentences[sentence][location] = referent
-        elif len(referent.split()) < 4:
-            before = sentences[sentence][:location]
-            insert = referent.split()
-            after = sentences[sentence][location+len(referent.split()):]
-            sentences[sentence] = before + insert + after
+        try:
+            if len(referent.split()) < 2:
+                sentences[sentence][location] = referent
+            # elif len(referent.split()) < 3:
+            #     before = sentences[sentence][:location]
+            #     insert = referent.split()
+            #     after = sentences[sentence][location+len(referent.split()):]
+            #     sentences[sentence] = before + insert + after
+        except IndexError:
+            print 'Indexing error encountered'
 
         return sentences
 
@@ -114,16 +113,13 @@ def parse(text, lines):
         links = build_reflinks(entity)
         all_links.append(links)
 
-
-    text = [t.strip() for t in text.split('.')]
-    text = [t.replace('newline', ' ') for t in text]
-    text = [preprocess(t).split() for t in text]
-
-    #sentences = [nltk.word_tokenize(t) for t in text]
+    text = tokenizer.tokenize(text)
+    text = [t.replace('\n',' ') for t in text]
+    sentences = [nltk.word_tokenize(t) for t in text]
 
     for link_set in all_links:
         for link in link_set:
-            sentences = execute_reflink(link, text)
+            sentences = execute_reflink(link, sentences)
 
     return sentences
 
