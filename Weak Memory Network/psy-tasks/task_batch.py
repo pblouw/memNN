@@ -79,7 +79,7 @@ def execute(trial, n_epochs, timetags, word2vec, roles, coref):
         d = 300
     model = WeakMemoryNetwork(
         d, all_stories, timetags=timetags, word2vec=word2vec, roles=roles,
-        coref=coref)
+        coref=coref, path=path)
 
     pre_train_acc = compute_accuracy(train_stories, model)
     pre_test_acc = compute_accuracy(test_stories, model)

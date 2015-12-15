@@ -1,5 +1,7 @@
 import numpy as np
 import modules
+import os
+import os.path
 import string
 import cPickle as pickle
 
@@ -31,7 +33,7 @@ class BagOfWords(object):
 class WeakMemoryNetwork(object):
     # Weakly supervised memory network
     def __init__(self, embedding_dim, stories, word2vec=False, roles=False,
-                 timetags=False, coref=False):
+                 timetags=False, coref=False, path=''):
 
         self.embedding_dim = embedding_dim
         self.vocab = None
@@ -40,6 +42,7 @@ class WeakMemoryNetwork(object):
         self.timetags = timetags
         self.roles = roles
         self.coref = coref
+        self.path = path
 
         if word2vec and embedding_dim != 300 and not timetags:
             raise Exception('Word2Vec embeddings are 300 dimensions')
@@ -100,7 +103,8 @@ class WeakMemoryNetwork(object):
 
         # Build word2vec vocab
         if self.word2vec:
-            with open('word2vec.pickle', 'rb') as pickle_file:
+            word2vec_path = os.path.join(self.path, 'word2vec.pickle')
+            with open(word2vec_path, 'rb') as pickle_file:
                 self.word_vecs = pickle.load(pickle_file)
 
             if self.roles:
