@@ -2,11 +2,10 @@ import cPickle as pickle
 import os.path
 import platform
 import sys
-abspath = '/home/jgosmann/Documents/projects/stat946/memNN/Weak Memory Network'
-if os.path.exists(abspath):
-    sys.path.insert(0, abspath)
-else:
-    sys.path.insert(0, '..')
+path = '/home/jgosmann/Documents/projects/stat946/memNN/Weak Memory Network'
+if not os.path.exists(path):
+    path = os.pardir
+sys.path.insert(0, path)
 
 from psyrun import Param, map_pspace_parallel
 from psyrun.scheduler import Sqsub
@@ -22,10 +21,10 @@ variants = Param(
     coref=[False, False, False, False, True, True])
 
 if platform.node().startswith('ctn'):
-    pspace = (Param(n_epochs=[5]) + variants) * Param(trial=range(1))
+    pspace = Param(n_epochs=[5]) * variants * Param(trial=range(1))
     mapper = map_pspace_parallel
 else:  # assume sharcnet
-    pspace = (Param(n_epochs=[10]) + variants) * Param(trial=range(30))
+    pspace = Param(n_epochs=[10]) * variants * Param(trial=range(30))
     workdir = '/work/jgosmann/stat946'
     scheduler = Sqsub(workdir)
     scheduler_args = {
@@ -34,6 +33,7 @@ else:  # assume sharcnet
     }
     n_splits = 90
     min_items = 2
+
 
 def clean(stories):
     return [s for s in stories if len(s.queries) > 1]
@@ -48,20 +48,24 @@ def compute_accuracy(stories, model):
 
 
 def load_data(coref):
+    data_path = os.path.join(path, 'MCTest')
     if coref:
-        with open('MCTest/mc160.train.coref', 'rb') as f:
+        with open(os.path.join(data_path, 'mc160.train.coref'), 'rb') as f:
             train_stories = clean(pickle.load(f))
-        with open('MCTest/mc160.dev.coref', 'rb') as f:
+        with open(os.path.join(data_path, 'mc160.dev.coref'), 'rb') as f:
             dev_stories = clean(pickle.load(f))
-        with open('MCTest/mc160.test.coref', 'rb') as f:
+        with open(os.path.join(data_path, 'mc160.test.coref'), 'rb') as f:
             test_stories = clean(pickle.load(f))
     else:
         train_stories = clean(load_stories(
-            'MCTest/mc160.train.tsv', 'MCTest/mc160.train.ans'))
+            os.path.join(data_path, 'mc160.train.tsv'),
+            os.path.join(data_path, 'mc160.train.ans')))
         dev_stories = clean(load_stories(
-            'MCTest/mc160.dev.tsv', 'MCTest/mc160.dev.ans'))
+            os.path.join(data_path, 'mc160.dev.tsv'),
+            os.path.join(data_path, 'mc160.dev.ans')))
         test_stories = clean(load_stories(
-            'MCTest/mc160.test.tsv', 'MCTest/mc160.test.ans'))
+            os.path.join(data_path, 'mc160.test.tsv'),
+            os.path.join(data_path, 'mc160.test.ans')))
     return train_stories, dev_stories, test_stories
 
 
