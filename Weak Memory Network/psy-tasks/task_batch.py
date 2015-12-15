@@ -31,7 +31,7 @@ else:  # assume sharcnet
         'timelimit': '24h',
         'memory': '1536M'
     }
-    n_splits = 90
+    max_splits = 90
     min_items = 2
 
 
