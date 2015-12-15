@@ -133,18 +133,19 @@ class WeakMemoryNetwork(object):
             for word in self.word_list:
                 self.vocab[word]
 
-    # Fix this!!
+
     def new_vec(self, word, threshold=0.15):
         count = 0
-        while count < 200:
+        while count < 500:
             vec = np.random.randn(300)
             vec = self.normalize(vec)
             for w2v in self.word_vecs.values():
                 if np.dot(vec, w2v) > threshold:
                     count += 1
                     break
-                else:
-                    return vec
+            else:
+                return vec
+        print 'Could not generate a good vector'       
         return vec
 
 
