@@ -1,20 +1,39 @@
 import cPickle as pickle
+import os.path
+import platform
 import sys
-sys.path.insert(0, '..')
+abspath = '/home/jgosmann/Documents/projects/stat946/memNN/Weak Memory Network'
+if os.path.exists(abspath):
+    sys.path.insert(0, abspath)
+else:
+    sys.path.insert(0, '..')
 
 from psyrun import Param, map_pspace_parallel
+from psyrun.scheduler import Sqsub
 
 from mctest_load import load_stories
 from weak_memn import WeakMemoryNetwork
 
 
-pspace = Param(
-    n_epochs=5,
+variants = Param(
     timetags=[False, True, False, False, False, True],
     word2vec=[False, False, True, False, False, True],
     roles=[False, False, False, True, False, True],
-    coref=[False, False, False, False, True, True]) * Param(trial=range(1))
-mapper = map_pspace_parallel
+    coref=[False, False, False, False, True, True])
+
+if platform.node().startswith('ctn'):
+    pspace = (Param(n_epochs=[5]) + variants) * Param(trial=range(1))
+    mapper = map_pspace_parallel
+else:  # assume sharcnet
+    pspace = (Param(n_epochs=[10]) + variants) * Param(trial=range(30))
+    workdir = '/work/jgosmann/stat946'
+    scheduler = Sqsub(workdir)
+    scheduler_args = {
+        'timelimit': '24h',
+        'memory': '1536M'
+    }
+    n_splits = 90
+    min_items = 2
 
 def clean(stories):
     return [s for s in stories if len(s.queries) > 1]
