@@ -1,3 +1,4 @@
+
 """
 NOTE: This works, but it's a mess, so I'm planning on
 cleaning it up and refactoring it shortly.
@@ -39,32 +40,42 @@ def load_stories(filename, answerfile):
         return stories
 
 
-def parse(raw_story, answers):
+def parse(raw_story, answers, coref=False):
     items = raw_story.split('\t')[2:]
 
-    text = items.pop(0)
-    text = text.replace('\\newline', ' ')
+    if not coref:
+            text = tokenizer.tokenize(items.pop(0))
+            text = [t.replace('newline', ' ') for t in text]
+            text = [preprocess(t) for t in text]
 
-    queries = parse_queries(items, answers)
+    else:
+        text = items.pop(0)
+        text = text.replace('\\newline', ' ')
+
+    queries = parse_queries(items, answers, coref)
 
     return Story(text, queries)
 
 
-def parse_queries(items, answers):
+def parse_queries(items, answers, coref):
     query_list = []
 
     counter = 0
     for index, item in enumerate(items):
         if '?' in item and '?\"' not in item:
-            text = strip_tag(item)
-            text = text.strip()
+            if not coref:
+                text = preprocess(strip_tag(item))
+                choices = items[index+1:index+5]
+                choices = [preprocess(c) for c in choices]
 
-            choices = items[index+1:index+5]
-            choices = [c.capitalize() for c in choices]
-            choices = [c.replace('\r', ' ').strip() for c in choices]
+            else:     
+                text = strip_tag(item)
+                text = text.strip()
+                choices = items[index+1:index+5]
+                choices = [c.capitalize() for c in choices]
+                choices = [c.replace('\r', ' ').strip() for c in choices]
 
             ans = choices[text_to_ind(answers[counter])]
-
             query_list.append(Query(text, choices, ans))
             counter += 1
 
@@ -81,8 +92,8 @@ def strip_tag(item):
 
 def preprocess(text):
     text = text.strip()
-    # text = text.lower()
-    # text = text.translate(None, string.punctuation)
+    text = text.lower()
+    text = text.translate(None, string.punctuation)
     return text
 
 

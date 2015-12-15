@@ -6,15 +6,14 @@ from simplequestion import Query, Fact
 
 class MemoryNetwork(object):
     """
-    Note that this is a WIP and will be extended to handle other FB20 tasks.
     Currently, QA with 1 supporting fact is performed with perfect accuracy,
-    and QA with 2 supporting facts is performed with moderate accuracy.
+    and QA with 2 supporting facts is performed with solid accuracy.
     Increasing performance on this latter task should suffice to achieve
     reasonable performance on many of the tasks in FB20, since the model 
     architecture generalized to k=2 is constant across the tasks 
     (i.e. the data is the only thing that changes once the model works for k=2)
     """
-    def __init__(self, vocab_dim, embedding_dim, vectorizer, margin=0.2, k=1):
+    def __init__(self, vocab_dim, embedding_dim, vectorizer, margin=0.2, k=2):
         self.vocab_dim = vocab_dim
         self.temp_dim = vocab_dim + 3
         self.vectorizer = vectorizer
@@ -25,14 +24,14 @@ class MemoryNetwork(object):
         self.Om = np.random.random((embedding_dim, self.temp_dim))*0.2-0.1
         self.Oq = []
 
-        for _ in range(k): 
+        for _ in range(2): 
             self.Oq.append(np.random.random((embedding_dim, vocab_dim))*0.2-0.1)
 
         # Initialize R parameter matrices
         self.Rm = np.random.random((embedding_dim, self.vocab_dim))*0.2-0.1
         self.Rq = []
 
-        for _ in range(k+1): 
+        for _ in range(2): 
             self.Rq.append(np.random.random((embedding_dim, vocab_dim))*0.2-0.1)
 
 
@@ -74,8 +73,12 @@ class MemoryNetwork(object):
     def o_embed_x(self, x):
         # For handling variable numbers of items conditioning mem selection.
         if isinstance(x, list):
-            xs = [np.dot(self.Oq[_], self.phi_x(x[_])) for _ in range(len(x))]
-            embedding = np.sum(xs, axis=0) if len(xs) > 1 else xs.pop()
+            for _ in range(len(x)):
+                embedding = np.zeros(self.Oq[0].shape[0])
+                if _ >= 1:
+                    embedding += np.dot(self.Oq[1], self.phi_x(x[_]))
+                else:
+                    embedding += np.dot(self.Oq[0], self.phi_x(x[0]))
         else:
             embedding = np.dot(self.Oq[0], self.phi_x(x))
         return embedding
@@ -84,8 +87,12 @@ class MemoryNetwork(object):
     def r_embed_x(self, x):
         # For handling variable numbers of items conditioning resp. selection.
         if isinstance(x, list):
-            xs = [np.dot(self.Rq[_], self.phi_x(x[_])) for _ in range(len(x))]
-            embedding = np.sum(xs, axis=0) if len(xs) > 1 else xs.pop()
+            for _ in range(len(x)):
+                embedding = np.zeros(self.Rq[0].shape[0])
+                if _ >= 1:
+                    embedding += np.dot(self.Rq[1], self.phi_x(x[_]))
+                else:
+                    embedding += np.dot(self.Rq[0], self.phi_x(x[0]))
         else:
             embedding = np.dot(self.Rq[0], self.phi_x(x))
         return embedding
@@ -117,7 +124,7 @@ class MemoryNetwork(object):
         self.Om_grad = np.zeros_like(self.Om)
         self.Oq_grad = []
         
-        for _ in range(self.k):
+        for _ in range(2):
             self.Oq_grad.append(np.zeros_like(self.Oq[_]))
 
 
@@ -125,7 +132,7 @@ class MemoryNetwork(object):
         self.Rm_grad = np.zeros_like(self.Rm)
         self.Rq_grad = []
         
-        for _ in range(self.k+1):
+        for _ in range(2):
             self.Rq_grad.append(np.zeros_like(self.Rq[_]))
 
 
@@ -143,7 +150,10 @@ class MemoryNetwork(object):
                 
                 for _ in range(n+1):
                     bow_x = self.phi_x(xs[_])
-                    self.Oq_grad[_] += np.outer(embed_y, bow_x)
+                    if _ == 0:
+                        self.Oq_grad[0] += np.outer(embed_y, bow_x)
+                    else:
+                        self.Oq_grad[1] += np.outer(embed_y, bow_x)
 
                 self.Om_grad += np.outer(embed_x, bow_y)       
             
@@ -153,7 +163,10 @@ class MemoryNetwork(object):
             
                 for _ in range(n+1):
                     bow_x = self.phi_x(xs[_])
-                    self.Oq_grad[_] += -np.outer(embed_y, bow_x)
+                    if _ == 0:
+                        self.Oq_grad[0] += -np.outer(embed_y, bow_x)
+                    else:
+                        self.Oq_grad[1] += -np.outer(embed_y, bow_x)
 
                 self.Om_grad += -np.outer(embed_x, bow_y) 
 
@@ -171,22 +184,28 @@ class MemoryNetwork(object):
 
             # Note these are slightly hacky margins for computing loss 
             # Training w/ a simple margin didn't work well for some reason
-            if word != ans and self.score_r(xs, word) > 0.1:
+            if word != ans and self.score_r(xs, word) > 0.0:
                 for _ in range(len(xs)):
                     bow_x = self.phi_x(xs[_])
-                    self.Rq_grad[_] += np.outer(embed_r, bow_x)
+                    if _ == 0:
+                        self.Rq_grad[0] += np.outer(embed_r, bow_x)
+                    else:
+                        self.Rq_grad[1] += np.outer(embed_r, bow_x)
 
                 self.Rm_grad += np.outer(embed_xs, bow_r)
 
-            elif word == ans and self.score_r(xs, word) < 0.9:
+            elif word == ans and self.score_r(xs, word) < 0.1:
                 for _ in range(len(xs)):
                     bow_x = self.phi_x(xs[_])
-                    self.Rq_grad[_] += -np.outer(embed_r, bow_x)
+                    if _ == 0:
+                        self.Rq_grad[0] += -np.outer(embed_r, bow_x)
+                    else:
+                        self.Rq_grad[1] += -np.outer(embed_r, bow_x)
 
                 self.Rm_grad += -np.outer(embed_xs, bow_r)
 
 
-    def fit(self, stories, n_iter, rate=0.001):
+    def fit(self, stories, n_iter, rate=0.003):
         self.rate = rate
         for _ in range(n_iter):
             self.fit_story(random.choice(stories))
