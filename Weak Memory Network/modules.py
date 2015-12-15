@@ -180,7 +180,10 @@ class Output(Module):
 
     def sentence_to_hrr(self, sentence):
         # Modify this to include parsing, time features
-        words = sentence.split()
+        if hasattr(sentence, 'split'):
+            words = sentence.split()
+        else:
+            words = sentence
         words = [w for w in words if w not in self.stopwords]
 
         hrr = np.zeros(self.net.embedding_dim)
