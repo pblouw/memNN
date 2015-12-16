@@ -23,13 +23,13 @@ with open('MCTest/mc160.test.coref', 'rb') as f:
 
 all_stories = train_stories + test_stories + dev_stories
 
-
-agents = Parallel(n_jobs=4)(
+agents = Parallel(n_jobs=6)(
     delayed(postag)(sentence)
     for story in all_stories for sentence in story.text)
 
 asdict = {k: v for k, v in zip(
-    (sentence for story in all_stories for sentence in story.text), agents)}
+    (tuple(sentence)
+     for story in all_stories for sentence in story.text), agents)}
 
 with open('coref_pos.pkl', 'wb') as f:
     pickle.dump(asdict, f, 2)
