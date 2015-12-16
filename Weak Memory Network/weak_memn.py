@@ -23,7 +23,7 @@ class BagOfWords(object):
 
     @property
     def vocab(self):
-        return self._vectorizer.vocabulary_.keys()
+        return self._vectorizer.get_feature_names()
 
     @property
     def vocab_dim(self):
@@ -34,7 +34,11 @@ class WeakMemoryNetwork(object):
     # Weakly supervised memory network
     def __init__(
         self, embedding_dim, timetag_dim, stories, word2vec=False, roles=False,
-        timetags=False, coref=False, path='', pos_file='pos.pkl'):
+        timetags=False, coref=False, preinit=False, path='',
+        pos_file='pos.pkl'):
+
+        if not timetags:
+            timetag_dim = 0
 
         self.embedding_dim = embedding_dim
         self.timetag_dim = timetag_dim
@@ -44,6 +48,7 @@ class WeakMemoryNetwork(object):
         self.timetags = timetags
         self.roles = roles
         self.coref = coref
+        self.preinit = preinit
         self.path = path
 
         if word2vec and embedding_dim != 300 and not timetags:

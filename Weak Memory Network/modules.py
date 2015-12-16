@@ -57,6 +57,14 @@ class Response(Module):
         self.net = net
         self.embedder = np.random.random((net.embedding_dim + net.timetag_dim, 
                                          len(net.vectorizer.vocab)))*0.2-0.1
+        if self.net.preinit:
+            for i, word in enumerate(self.net.vectorizer.vocab):
+                if self.net.word2vec:
+                    if word in self.net.word_vecs.keys():
+                        self.embedder[:net.embedding_dim, i] = self.net.word_vecs[word]
+                else:
+                    if word in self.net.vocab.keys:
+                        self.embedder[:net.embedding_dim, i] = self.net.vocab[word].v
 
     def build_choices(self, query):
         # Generates 4 choice embeddings using encode_choice 
@@ -75,13 +83,6 @@ class Response(Module):
     def encode_choice(self, choice):
         words = choice.split()
         words = self.clean(words)
-
-        # if self.net.word2vec:
-        #     vec = np.zeros(300)
-        #     for word in words:
-        #         if word in self.net.word_vecs.keys():
-        #             vec += self.net.word_vecs[word]
-        #     return vec
 
         words = ' '.join(words)
         bow = self.net.vectorizer(choice).flatten()
@@ -203,16 +204,18 @@ class Input(Module):
 
         self.embedder = np.random.random((net.embedding_dim + net.timetag_dim,
                                           len(net.vectorizer.vocab)))*0.2-0.1
+        if self.net.preinit:
+            for i, word in enumerate(self.net.vectorizer.vocab):
+                if self.net.word2vec:
+                    if word in self.net.word_vecs.keys():
+                        self.embedder[:net.embedding_dim, i] = self.net.word_vecs[word]
+                else:
+                    if word in self.net.vocab.keys:
+                        self.embedder[:net.embedding_dim, i] = self.net.vocab[word].v
 
     def encode_question(self, query):
         words = query.text.split()
         words = self.clean(words)
-
-        # vec = np.zeros(300)
-        # for word in words:
-        #     if word in self.net.word_vecs.keys():
-        #         vec += self.net.word_vecs[word]
-        # return vec
 
         words = ' '.join(words)
         bow = self.net.vectorizer(words).flatten()
