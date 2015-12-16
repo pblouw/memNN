@@ -6,7 +6,7 @@ from nengo import spa
 
 class Module(object):
     roles = ['A'+str(x) for x in range(20)]
-    agents = []
+    agents = {}
     stopwords = ['the','a','of','and','this','that','to']
  
     # Things common to all modules
@@ -45,7 +45,7 @@ class Module(object):
     @staticmethod
     def clean(words):
         words = [w if w not in Module.agents else 
-                 Module.roles[Module.agents.index(w)] for w in words]
+                 Module.roles[Module.agents[w]] for w in words]
         words = [w.lower() if w not in Module.roles else w for w in words]
         words = [w.translate(None, string.punctuation) for w in words]
         words = [w for w in words if w not in Module.stopwords]
@@ -118,7 +118,7 @@ class Output(Module):
 
     def build_memory(self, story):
         # Converts story text into array of HRRs encoding sents
-        Module.agents = []
+        Module.agents = {}
         text = story.text
 
         def build_w2v_memory(story):
