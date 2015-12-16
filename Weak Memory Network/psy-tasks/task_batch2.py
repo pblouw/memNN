@@ -15,7 +15,7 @@ from weak_memn import WeakMemoryNetwork
 
 
 variants = Param(n_epochs=30, word2vec=[False, True]) * (Param(
-    timetags=False, shift=None,
+    timetags=False, shift=0.,
     coref=[False, True, False, True, False],
     roles=[False, False, True, True, False],
     preinit=[False, False, False, False, True]) + Param(
@@ -30,11 +30,11 @@ else:  # assume sharcnet
     workdir = '/work/jgosmann/stat946'
     scheduler = Sqsub(workdir)
     scheduler_args = {
-        'timelimit': '24h',
+        'timelimit': '2h',
         'memory': '1536M'
     }
-    max_splits = 90
-    min_items = 2
+    max_splits = 100
+    min_items = 5
 
 
 def clean(stories):
