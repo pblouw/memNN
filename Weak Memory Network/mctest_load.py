@@ -92,7 +92,6 @@ def strip_tag(item):
 
 def preprocess(text):
     text = text.strip()
-    text = text.lower()
     text = text.translate(None, string.punctuation)
     return text
 

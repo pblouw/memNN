@@ -1,6 +1,5 @@
 import cPickle as pickle
 from joblib import Parallel, delayed
-from mctest_load import load_stories
 from modules import Module
 
 
@@ -12,20 +11,25 @@ def postag(sentence):
     return Module.extract_agents(sentence)
 
 
-train_stories = clean(load_stories('MCTest/mc500.train.tsv','MCTest/mc500.train.ans'))
-dev_stories = clean(load_stories('MCTest/mc500.dev.tsv','MCTest/mc500.dev.ans'))
-test_stories = clean(load_stories('MCTest/mc500.test.tsv','MCTest/mc500.test.ans'))
+with open('MCTest/mc160.dev.coref', 'rb') as f:
+    dev_stories = clean(pickle.load(f))
+
+with open('MCTest/mc160.train.coref', 'rb') as f:
+    train_stories = clean(pickle.load(f))
+
+with open('MCTest/mc160.test.coref', 'rb') as f:
+    test_stories = clean(pickle.load(f))
 
 
 all_stories = train_stories + test_stories + dev_stories
 
 agents = Parallel(n_jobs=6)(
-    delayed(postag)(sentence.split())
+    delayed(postag)(sentence)
     for story in all_stories for sentence in story.text)
 
 asdict = {k: v for k, v in zip(
-    (tuple(sentence.split())
+    (tuple(sentence)
      for story in all_stories for sentence in story.text), agents)}
 
-with open('pos_500.pkl', 'wb') as f:
+with open('coref_pos.pkl', 'wb') as f:
     pickle.dump(asdict, f, 2)
