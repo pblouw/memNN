@@ -55,12 +55,13 @@ class Response(Module):
     def __init__(self, net):
         super(Response, self).__init__()
         self.net = net
-        self.embedder = np.random.random((net.embedding_dim, 
+        self.embedder = np.random.random((net.embedding_dim + net.timetag_dim, 
                                          len(net.vectorizer.vocab)))*0.2-0.1
 
     def build_choices(self, query):
         # Generates 4 choice embeddings using encode_choice 
-        self.choices = np.zeros((0, self.net.embedding_dim))
+        self.choices = np.zeros(
+            (0, self.net.embedding_dim + self.net.timetag_dim))
         self.choices_bow = np.zeros((0, len(self.net.vectorizer.vocab)))
 
         for choice in query.choices:
@@ -122,6 +123,8 @@ class Output(Module):
 
         if self.net.roles:
             for sentence in story.text:
+                if not self.net.coref:
+                    sentence = sentence.split()
                 if self.pos_dict:
                     agents = self.pos_dict[tuple(sentence)]
                 else:
@@ -143,7 +146,7 @@ class Output(Module):
                 vec = self.sentence_to_vec(sentence)
             else:
                 vec = self.sentence_to_hrr(sentence)
-            self.memory = np.vstack([memory, vec])
+            self.memory = np.vstack([self.memory, vec])
 
         # If timetags, extend memory to include time vecs
         if self.net.timetags:
@@ -162,7 +165,7 @@ class Output(Module):
 
     def sentence_to_hrr(self, sentence):
         hrr = np.zeros(self.net.embedding_dim)
-        for word in words:
+        for word in sentence:
             if word in self.net.vocab.keys:
                 hrr += self.net.vocab[word].v
         return hrr
@@ -197,7 +200,8 @@ class Input(Module):
     def __init__(self, net):       
         super(Input, self).__init__()
         self.net = net
-        self.embedder = np.random.random((net.embedding_dim, 
+
+        self.embedder = np.random.random((net.embedding_dim + net.timetag_dim,
                                           len(net.vectorizer.vocab)))*0.2-0.1
 
     def encode_question(self, query):

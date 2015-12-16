@@ -123,21 +123,16 @@ class WeakMemoryNetwork(object):
 
                 if np.linalg.norm(self.word_vecs[word]) == 0:
                     self.word_vecs[word] = self.new_vec(word)
-            
+
             if self.timetags:
-                self.vocab = TextVocabulary(self.embedding_dim - 300, 
+                self.vocab = TextVocabulary(self.embedding_dim,
                                             max_similarity=0.2)
                 for word in self.word_list:
                     self.vocab[word]
 
         # Use random hrr vocabulary instead of word2vec
         else:
-            if self.timetags:
-                self.vocab = TextVocabulary(self.embedding_dim // 2, 
-                                            max_similarity=0.2)
-            else:
-                self.vocab = TextVocabulary(self.embedding_dim, 
-                                            max_similarity=0.2)
+            self.vocab = TextVocabulary(self.embedding_dim, max_similarity=0.2)
 
             for word in self.word_list:
                 self.vocab[word]
