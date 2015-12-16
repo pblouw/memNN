@@ -9,7 +9,7 @@ class Module(object):
     stopwords = ['the', 'a', 'of', 'and', 'this', 'that', 'to']
 
     # Things common to all modules
-    def __init__(self, rate=0.03):
+    def __init__(self, rate=0.06):
         self.rate = rate
 
 
