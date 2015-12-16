@@ -128,7 +128,7 @@ class Output(Module):
                     agents = self.extract_agents(sentence)
                     for agent in agents:
                         if agent not in Module.agents:
-                            Module.agents.append(agent)
+                            Module.agents[agent] = len(Module.agents)
                 
                 vec = self.sentence_to_vec(sentence)
                 memory = np.vstack([memory, vec])
