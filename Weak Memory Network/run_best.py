@@ -33,7 +33,9 @@ with open('MCTest/mc160.test.coref','rb') as f:
 all_stories = train_stories + test_stories + dev_stories
 
 # initialize with all stories to get full vocab
-model = WeakMemoryNetwork(556, all_stories, timetags=True, word2vec=True, roles=True, coref=True)
+model = WeakMemoryNetwork(
+    300, 256, all_stories, timetags=True, word2vec=True, roles=True, coref=True,
+    preinit=False, pos_file='coref_pos.pkl')
 
 print 'Training Accuracy prior to training: ', compute_accuracy(train_stories, model)
 print 'Testing Accuracy prior to training: ', compute_accuracy(test_stories, model)
