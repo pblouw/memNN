@@ -22,7 +22,7 @@ test_stories = clean(load_stories('MCTest/mc160.test.tsv','MCTest/mc160.test.ans
 all_stories = train_stories + test_stories + dev_stories
 
 # initialize with all stories to get full vocab
-model = WeakMemoryNetwork(256, all_stories, timetags=False, word2vec=False)
+model = WeakMemoryNetwork(300, 256, all_stories, timetags=False, word2vec=False)
 
 print 'Training Accuracy prior to training: ', compute_accuracy(train_stories, model)
 print 'Testing Accuracy prior to training: ', compute_accuracy(test_stories, model)

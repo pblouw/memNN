@@ -32,10 +32,12 @@ class BagOfWords(object):
 
 class WeakMemoryNetwork(object):
     # Weakly supervised memory network
-    def __init__(self, embedding_dim, stories, word2vec=False, roles=False,
-                 timetags=False, coref=False, path=''):
+    def __init__(
+        self, embedding_dim, timetag_dim, stories, word2vec=False, roles=False,
+        timetags=False, coref=False, path='', pos_file='pos.pkl'):
 
         self.embedding_dim = embedding_dim
+        self.timetag_dim = timetag_dim
         self.vocab = None
         self.vectorizer = None
         self.word2vec = word2vec
@@ -49,8 +51,11 @@ class WeakMemoryNetwork(object):
 
         self.build_vocab(stories)
 
+        with open(os.path.join(path, pos_file), 'rb') as f:
+            pos_dict = pickle.load(f)
+
         self._input = modules.Input(self)
-        self._output = modules.Output(self)
+        self._output = modules.Output(self, pos_dict=pos_dict)
         self._response = modules.Response(self)
 
 

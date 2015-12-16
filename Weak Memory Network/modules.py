@@ -1,5 +1,4 @@
 import numpy as np
-import sys
 import nltk
 import string
 from nengo import spa
@@ -7,8 +6,8 @@ from nengo import spa
 class Module(object):
     roles = ['A'+str(x) for x in range(20)]
     agents = {}
-    stopwords = ['the','a','of','and','this','that','to']
- 
+    stopwords = ['the', 'a', 'of', 'and', 'this', 'that', 'to']
+
     # Things common to all modules
     def __init__(self, rate=0.03):
         self.rate = rate
@@ -27,7 +26,7 @@ class Module(object):
         return np.exp(z) / np.sum(np.exp(z), axis=0)
 
     @staticmethod
-    def normalize(z):    
+    def normalize(z):
         norm = np.linalg.norm(z)
         if norm > 0:
             return z / float(norm)
@@ -44,7 +43,7 @@ class Module(object):
 
     @staticmethod
     def clean(words):
-        words = [w if w not in Module.agents else 
+        words = [w if w not in Module.agents else
                  Module.roles[Module.agents[w]] for w in words]
         words = [w.lower() if w not in Module.roles else w for w in words]
         words = [w.translate(None, string.punctuation) for w in words]
@@ -98,11 +97,12 @@ class Response(Module):
 
 class Output(Module):
 
-    def __init__(self, net):
+    def __init__(self, net, pos_dict=None):
         super(Output, self).__init__()
         self.net = net
         self.embedder = np.random.random((net.embedding_dim, 
                                  len(net.vectorizer.vocab)))*0.2-0.1
+        self.pos_dict = pos_dict
 
     # def update_parameters(self, gradient):
     #     partial = np.dot(self.map_bow.T, self.hidden_dist)
@@ -117,60 +117,42 @@ class Output(Module):
 
 
     def build_memory(self, story):
-        # Converts story text into array of HRRs encoding sents
         Module.agents = {}
         text = story.text
 
-        def build_w2v_memory(story):
-            memory = np.zeros((0, 300))
+        if self.net.roles:
             for sentence in story.text:
-                if self.net.roles:
+                if self.pos_dict:
+                    agents = self.pos_dict[tuple(sentence)]
+                else:
                     agents = self.extract_agents(sentence)
-                    for agent in agents:
-                        if agent not in Module.agents:
-                            Module.agents[agent] = len(Module.agents)
-                
+                for agent in agents:
+                    if agent not in Module.agents:
+                        Module.agents[agent] = len(Module.agents)
+
+        self.memory = np.zeros((0, self.net.embedding_dim))
+        for sentence in story.text:
+            if self.net.coref:
+                sentence = ['not' if w == "n\'t" else w for w in sentence]
+            else:
+                sentence = sentence.split()
+            sentence = self.clean(sentence)
+            sentence = [w for w in sentence if len(w) > 1]
+
+            if self.net.word2vec:
                 vec = self.sentence_to_vec(sentence)
-                memory = np.vstack([memory, vec])
-            return memory
-       
-        def build_hrr_memory(story):
-            memory = np.zeros((0, self.net.embedding_dim))
-            
-            if self.net.timetags:
-                memory = np.zeros((0, self.net.embedding_dim // 2))
-
-            for sentence in story.text:
-                hrr = self.sentence_to_hrr(sentence)
-                memory = np.vstack([memory, hrr])
-            return memory
-
-        
-        if self.net.word2vec:
-            self.memory = build_w2v_memory(story)
-        else:
-            self.memory = build_hrr_memory(story)    
+            else:
+                vec = self.sentence_to_hrr(sentence)
+            self.memory = np.vstack([memory, vec])
 
         # If timetags, extend memory to include time vecs
         if self.net.timetags:
-            if self.net.word2vec:
-                self.memory = np.hstack([self.memory, self.build_timetags(
-                    self.memory.shape[0], self.net.embedding_dim - 300)[::-1]])
-            else:
-                self.memory = np.hstack([self.memory, self.build_timetags(
-                    self.memory.shape[0], self.net.embedding_dim // 2)[::-1]])
+            self.memory = np.hstack([self.memory, self.build_timetags(
+                self.memory.shape[0], self.net.timetag_dim)[::-1]])
 
 
     def sentence_to_vec(self, sentence):
-        if self.net.coref:
-            sentence = ['not' if w == "n\'t" else w for w in sentence]
-            sentence = self.clean(sentence)
-        else:
-            sentence = sentence.split()
-        
-        sentence = [w for w in sentence if len(w) > 1]
-
-        vec = np.zeros(300)
+        vec = np.zeros(self.net.embedding_dim)
         for word in sentence:
             word = word.translate(None, string.punctuation)
             if word in self.net.word_vecs.keys():
@@ -179,22 +161,10 @@ class Output(Module):
 
 
     def sentence_to_hrr(self, sentence):
-        # Modify this to include parsing, time features
-        if hasattr(sentence, 'split'):
-            words = sentence.split()
-        else:
-            words = sentence
-        words = [w for w in words if w not in self.stopwords]
-
         hrr = np.zeros(self.net.embedding_dim)
-
-        if self.net.timetags:
-            hrr = np.zeros(self.net.embedding_dim // 2)
-
         for word in words:
             if word in self.net.vocab.keys:
                 hrr += self.net.vocab[word].v
-
         return hrr
 
 
