@@ -177,7 +177,7 @@ class Output(Module):
         base.make_unitary()
         base = base.v
 
-        step_size = 0.25
+        step_size = self.net.shift
 
         increment = np.zeros(d)
         increment[1] = 1.

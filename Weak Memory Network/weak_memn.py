@@ -34,7 +34,7 @@ class WeakMemoryNetwork(object):
     # Weakly supervised memory network
     def __init__(
         self, embedding_dim, timetag_dim, stories, word2vec=False, roles=False,
-        timetags=False, coref=False, preinit=False, path='',
+        timetags=False, coref=False, preinit=False, shift=0.1, path='',
         pos_file='pos.pkl'):
 
         if not timetags:
@@ -49,6 +49,7 @@ class WeakMemoryNetwork(object):
         self.roles = roles
         self.coref = coref
         self.preinit = preinit
+        self.shift = shift
         self.path = path
 
         if word2vec and embedding_dim != 300 and not timetags:
