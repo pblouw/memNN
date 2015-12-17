@@ -14,27 +14,27 @@ from mctest_load import load_stories
 from weak_memn import WeakMemoryNetwork
 
 
-variants = Param(n_epochs=20, word2vec=[False, True]) * (Param(
-    timetags=False, shift=0.,
-    coref=[False, True, False, True, False],
-    roles=[False, False, True, True, False],
-    preinit=[False, False, False, False, True]) + Param(
-    timetags=True, coref=False, roles=False, preinit=False,
-    shift=[0.05, 0.1, 0.2, 0.4, 1.]))
+pspace = Param(
+    n_epochs=20,
+    word2vec=False,
+    timetags=True,
+    shift=0.2,
+    coref=False,
+    roles=True,
+    preinit=False,
+    trial=range(30))
 
 if platform.node().startswith('ctn'):
-    pspace = variants * Param(trial=range(1))
     mapper = map_pspace_parallel
 else:  # assume sharcnet
-    pspace = variants * Param(trial=range(30))
     workdir = '/work/jgosmann/stat946'
     scheduler = Sqsub(workdir)
     scheduler_args = {
-        'timelimit': '4h',
+        'timelimit': '3h',
         'memory': '1536M'
     }
     max_splits = 100
-    min_items = 5
+    min_items = 1
 
 
 def clean(stories):

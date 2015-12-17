@@ -14,27 +14,25 @@ from mctest_load import load_stories
 from weak_memn import WeakMemoryNetwork
 
 
-variants = Param(n_epochs=20, word2vec=[False, True]) * (Param(
-    timetags=False, shift=0.,
-    coref=[False, True, False, True, False],
-    roles=[False, False, True, True, False],
-    preinit=[False, False, False, False, True]) + Param(
-    timetags=True, coref=False, roles=False, preinit=False,
-    shift=[0.05, 0.1, 0.2, 0.4, 1.]))
+pspace = Param(
+    word2vec=False,
+    timetags=False,
+    coref=False,
+    roles=False,
+    preinit=True,
+    trial=range(30))
 
 if platform.node().startswith('ctn'):
-    pspace = variants * Param(trial=range(1))
     mapper = map_pspace_parallel
 else:  # assume sharcnet
-    pspace = variants * Param(trial=range(30))
     workdir = '/work/jgosmann/stat946'
     scheduler = Sqsub(workdir)
     scheduler_args = {
-        'timelimit': '4h',
+        'timelimit': '1h',
         'memory': '1536M'
     }
     max_splits = 100
-    min_items = 5
+    min_items = 1
 
 
 def clean(stories):
@@ -52,52 +50,43 @@ def compute_accuracy(stories, model):
 def load_data(coref):
     data_path = os.path.join(path, 'MCTest')
     if coref:
-        with open(os.path.join(data_path, 'mc160.train.coref'), 'rb') as f:
+        with open(os.path.join(data_path, 'mc500.train.coref'), 'rb') as f:
             train_stories = clean(pickle.load(f))
-        with open(os.path.join(data_path, 'mc160.dev.coref'), 'rb') as f:
+        with open(os.path.join(data_path, 'mc500.dev.coref'), 'rb') as f:
             dev_stories = clean(pickle.load(f))
-        with open(os.path.join(data_path, 'mc160.test.coref'), 'rb') as f:
+        with open(os.path.join(data_path, 'mc500.test.coref'), 'rb') as f:
             test_stories = clean(pickle.load(f))
     else:
         train_stories = clean(load_stories(
-            os.path.join(data_path, 'mc160.train.tsv'),
-            os.path.join(data_path, 'mc160.train.ans')))
+            os.path.join(data_path, 'mc500.train.tsv'),
+            os.path.join(data_path, 'mc500.train.ans')))
         dev_stories = clean(load_stories(
-            os.path.join(data_path, 'mc160.dev.tsv'),
-            os.path.join(data_path, 'mc160.dev.ans')))
+            os.path.join(data_path, 'mc500.dev.tsv'),
+            os.path.join(data_path, 'mc500.dev.ans')))
         test_stories = clean(load_stories(
-            os.path.join(data_path, 'mc160.test.tsv'),
-            os.path.join(data_path, 'mc160.test.ans')))
+            os.path.join(data_path, 'mc500.test.tsv'),
+            os.path.join(data_path, 'mc500.test.ans')))
     return train_stories, dev_stories, test_stories
 
 
-def execute(trial, n_epochs, timetags, shift, word2vec, roles, coref, preinit):
+def execute(trial, timetags, word2vec, roles, coref, preinit):
     train_stories, dev_stories, test_stories = load_data(coref)
     all_stories = train_stories + test_stories + dev_stories
 
     if coref:
-        pos_file = 'coref_pos.pkl'
+        pos_file = 'coref_pos_500.pkl'
     else:
-        pos_file = 'pos.pkl'
+        pos_file = 'pos_500.pkl'
 
     model = WeakMemoryNetwork(
         300, 256, all_stories, timetags=timetags, word2vec=word2vec,
-        roles=roles, coref=coref, preinit=preinit, shift=shift, path=path,
+        roles=roles, coref=coref, preinit=preinit, path=path,
         pos_file=pos_file)
 
     pre_train_acc = compute_accuracy(train_stories, model)
     pre_test_acc = compute_accuracy(test_stories, model)
 
-    for _ in range(n_epochs):
-        for story in train_stories + dev_stories:
-            model.train(story)
-
-    post_train_acc = compute_accuracy(train_stories, model)
-    post_test_acc = compute_accuracy(test_stories, model)
-
     return {
         'pre_train_acc': pre_train_acc,
         'pre_test_acc': pre_test_acc,
-        'post_train_acc': post_train_acc,
-        'post_test_acc': post_test_acc,
     }
